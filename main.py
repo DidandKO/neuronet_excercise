@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 class Context:
     _state = None
-    _user_id = None
+    _user_name = None
 
     def __init__(self, state: State) -> None:
         self.set_state(state)
@@ -17,12 +17,12 @@ class Context:
     def get_state(self):
         return self._state
 
-    def set_user_id(self, user_id):
-        print(f'Общение с пользоваетелем {user_id}')
-        self._user_id = user_id
+    def set_user_name(self, user_name):
+        print(f'Общение с пользоваетелем {user_name}')
+        self._user_name = user_name
 
     def send_message(self, text_message):
-        self._state.send_message(text_message, self._user_id)
+        self._state.send_message(text_message, self._user_name)
 
     def choose_message(self, user_message):
         return self._state.choose_message(user_message)
@@ -38,7 +38,7 @@ class State(ABC):
         self._context = context
 
     @abstractmethod
-    def send_message(self, text_message, user_id) -> None:
+    def send_message(self, text_message, user_name) -> None:
         pass
 
     @abstractmethod
@@ -49,6 +49,7 @@ class State(ABC):
 class HelloLogicState(State):
 
     ignore_counter = 0
+    company_name = 'Neuro.net'
 
     messages = {
         'hello': '{name}, добрый день!'
@@ -60,9 +61,10 @@ class HelloLogicState(State):
         'hello_null': 'Извините, вас не слышно. Вы могли бы повторить'
     }
 
-    def send_message(self, text_message, user_id) -> None:
+    def send_message(self, text_message, user_name) -> None:
         if text_message in self.messages:
-            print(f"!SENDING \"{self.messages[text_message]}\" to {user_id}")
+            print(f"!SENDING \"{self.messages[text_message].format(name=user_name, company_name=self.company_name)}\""
+                  f" to {user_name}")
             self.context.set_state(self)
         elif text_message == 'recommend_main':
             self.context.set_state(MainLogicState())
@@ -113,9 +115,9 @@ class MainLogicState(State):
         'recommend_default': 'повторите пожалуйста ',
     }
 
-    def send_message(self, text_message, user_id) -> None:
+    def send_message(self, text_message, user_name) -> None:
         if text_message in self.messages:
-            print(f"!SENDING \"{self.messages[text_message]}\" to {user_id}")
+            print(f"!SENDING \"{self.messages[text_message]}\" to {user_name}")
             self.context.set_state(self)
         elif text_message in ['hangup_wrong_time', 'hangup_positive', 'hangup_negative', 'hangup_null']:
             self.context.set_state(HangupLogicState())
@@ -166,9 +168,9 @@ class HangupLogicState(State):
         'hangup_null': 'Вас все равно не слышно, будет лучше если я перезвоню. Всего вам доброго'
     }
 
-    def send_message(self, text_message, user_id) -> None:
+    def send_message(self, text_message, user_name) -> None:
         if text_message in self.messages:
-            print(f"!SENDING \"{self.messages[text_message]}\" to {user_id}")
+            print(f"!SENDING \"{self.messages[text_message]}\" to {user_name}")
             self.context.set_state(ForwardLogicState())
 
     def choose_message(self, user_message) -> str:
@@ -181,9 +183,9 @@ class ForwardLogicState(State):
                    ' Пожалуйста оставайтесь на линии.'
     }
 
-    def send_message(self, text_message, user_id) -> None:
+    def send_message(self, text_message, user_name) -> None:
         if text_message in self.messages:
-            print(f"!SENDING \"{self.messages[text_message]}\" to {user_id}")
+            print(f"!SENDING \"{self.messages[text_message]}\" to {user_name}")
         self.context.set_state(FinalState())
 
     def choose_message(self, user_message) -> str:
@@ -193,7 +195,7 @@ class ForwardLogicState(State):
 
 class FinalState(State):
 
-    def send_message(self, text_message, user_id) -> None:
+    def send_message(self, text_message, user_name) -> None:
         pass
 
     def choose_message(self, user_message) -> str:
@@ -202,7 +204,7 @@ class FinalState(State):
 
 if __name__ == '__main__':
     app = Context(HelloLogicState())
-    app.set_user_id('123')
+    app.set_user_name('Назар')
     app.send_message('hello')
     while type(app.get_state()).__name__ != 'FinalState':
         client_message = input('Сообщение пользователя: ')
