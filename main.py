@@ -61,22 +61,36 @@ class HelloLogicState(State):
         'hello_null': 'Извините, вас не слышно. Вы могли бы повторить'
     }
 
-    def send_message(self, text_message, user_name) -> None:
-        if text_message in self.messages:
-            print(f"!SENDING \"{self.messages[text_message].format(name=user_name, company_name=self.company_name)}\""
+    def send_message(self, chosen_message_id, user_name) -> None:
+        if chosen_message_id in self.messages:
+            print(f"!SENDING \"{self.messages[chosen_message_id].format(name=user_name, company_name=self.company_name)}\""
                   f" to {user_name}")
+            # nv.say(self.messages[chosen_message_id].format(name=user_name, company_name=self.company_name))
             self.context.set_state(self)
-        elif text_message == 'recommend_main':
+        elif chosen_message_id == 'recommend_main':
             self.context.set_state(MainLogicState())
-            self.context.send_message(text_message)
-        elif text_message in ['hangup_wrong_time', 'hangup_null']:
+            self.context.send_message(chosen_message_id)
+        elif chosen_message_id in ['hangup_wrong_time', 'hangup_null']:
             self.context.set_state(HangupLogicState())
-            self.context.send_message(text_message)
+            self.context.send_message(chosen_message_id)
         else:
-            raise Exception(f'No State for case {text_message}')
+            raise Exception(f'No State for case {chosen_message_id}')
 
     def choose_message(self, user_message) -> str:
         chosen_message_id = None
+        # if user_message is None:
+        #   chosen_message_id = 'hello_null'
+        # user_message_result = nlu.extract(text=user_message, entities=['confirm', 'wrong_time', 'repeat']
+        # if user_message_result.intent('confirm'):
+        #   if user_message_result.intent('confirm') == True:
+        #       chosen_message_id = 'recommend_main'
+        #   else:
+        #       chosen_message_id = 'hangup_wrong_time'
+        # elif user_message_result.intent('wrong_time') == True:
+        #   chosen_message_id = 'hangup_wrong_time'
+        # elif user_message_result.intent('repeat') == True:
+        #   chosen_message_id = 'hello_repeat'
+
         if user_message:
             if user_message in ['DEFAULT', 'Да']:
                 chosen_message_id = 'recommend_main'
@@ -115,21 +129,47 @@ class MainLogicState(State):
         'recommend_default': 'повторите пожалуйста ',
     }
 
-    def send_message(self, text_message, user_name) -> None:
-        if text_message in self.messages:
-            print(f"!SENDING \"{self.messages[text_message]}\" to {user_name}")
+    def send_message(self, chosen_message_id, user_name) -> None:
+        if chosen_message_id in self.messages:
+            print(f"!SENDING \"{self.messages[chosen_message_id]}\" to {user_name}")
+            # nv.say(self.messages[chosen_message_id])
             self.context.set_state(self)
-        elif text_message in ['hangup_wrong_time', 'hangup_positive', 'hangup_negative', 'hangup_null']:
+        elif chosen_message_id in ['hangup_wrong_time', 'hangup_positive', 'hangup_negative', 'hangup_null']:
             self.context.set_state(HangupLogicState())
-            self.context.send_message(text_message)
-        elif text_message == 'forward':
+            self.context.send_message(chosen_message_id)
+        elif chosen_message_id == 'forward':
             self.context.set_state(ForwardLogicState())
-            self.context.send_message(text_message)
+            self.context.send_message(chosen_message_id)
         else:
-            raise Exception(f'No State for case {text_message}')
+            raise Exception(f'No State for case {chosen_message_id}')
 
     def choose_message(self, user_message) -> str:
         chosen_message_id = None
+
+        # if user_message is None:
+        #   chosen_message_id = 'hello_null'
+        # user_message_result = nlu.extract(text=user_message,
+        #           entities=['recommendation_score', 'recommendation', 'repeat', 'wrong_time', 'question']
+        # if user_message_result.intent('recommendation_score'):
+        #   if user_message_result.intent('recommendation_score') in range(8):
+        #       chosen_message_id = 'hangup_negative'
+        #   elif user_message_result.intent('recommendation_score') in range(9, 10):
+        #       chosen_message_id = 'hangup_positive'
+        # elif user_message_result.intent('recommendation') == 'negative':
+        #   chosen_message_id = 'recommend_score_negative'
+        # elif user_message_result.intent('recommendation') == 'neutral':
+        #   chosen_message_id = 'recommend_score_neutral'
+        # elif user_message_result.intent('recommendation') == 'positive':
+        #   chosen_message_id = 'recommend_score_positive'
+        # elif user_message_result.intent('recommendation') == 'dont_know':
+        #   chosen_message_id = 'recommend_repeat_2'
+        # elif user_message_result.intent('repeat') == True:
+        #   chosen_message_id = 'recommend_repeat'
+        # elif user_message_result.intent('wrong_time') == True:
+        #   chosen_message_id = 'hangup_wrong_time'
+        # elif user_message_result.intent('question') == True:
+        #   chosen_message_id = 'forward'
+
         if user_message:
             if user_message == 'DEFAULT':
                 chosen_message_id = 'recommend_default'
@@ -168,9 +208,10 @@ class HangupLogicState(State):
         'hangup_null': 'Вас все равно не слышно, будет лучше если я перезвоню. Всего вам доброго'
     }
 
-    def send_message(self, text_message, user_name) -> None:
-        if text_message in self.messages:
-            print(f"!SENDING \"{self.messages[text_message]}\" to {user_name}")
+    def send_message(self, chosen_message_id, user_name) -> None:
+        if chosen_message_id in self.messages:
+            print(f"!SENDING \"{self.messages[chosen_message_id]}\" to {user_name}")
+            # nv.say(self.messages[chosen_message_id])
             self.context.set_state(ForwardLogicState())
 
     def choose_message(self, user_message) -> str:
@@ -183,9 +224,10 @@ class ForwardLogicState(State):
                    ' Пожалуйста оставайтесь на линии.'
     }
 
-    def send_message(self, text_message, user_name) -> None:
-        if text_message in self.messages:
-            print(f"!SENDING \"{self.messages[text_message]}\" to {user_name}")
+    def send_message(self, chosen_message_id, user_name) -> None:
+        if chosen_message_id in self.messages:
+            print(f"!SENDING \"{self.messages[chosen_message_id]}\" to {user_name}")
+            # nv.say(self.messages[chosen_message_id])
         self.context.set_state(FinalState())
 
     def choose_message(self, user_message) -> str:
